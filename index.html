@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Streaming Video Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+</head>
+<style>
+
+    body {
+        margin: 0;
+        overflow: hidden;
+        /* width: 100%; */
+        height: 100vh;
+    }
+
+    .main {
+        display: flex;
+        width: 100%;
+        height: 100vh;
+        display: none;
+    }
+
+    .login {
+        background-color: aliceblue;
+        font-family: Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        display: none;
+    }
+
+    .register {
+        background-color: aliceblue;
+        font-family: Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        display: flex;
+    }
+
+    .sidebar-size {
+        width: 25%;
+    }
+
+    .container-main-size {
+        width: 100%;
+    }
+
+    .icon {
+        display: none;
+        
+    }
+
+    .profile-name {
+        display: flex;
+        justify-content: flex-start;
+        flex-grow: 1;
+
+
+    }
+
+    .logout {
+        display: flex;
+        justify-content: flex-end;
+        flex-grow: 1;
+
+    }
+
+    .sidebar-profile {
+        display: flex;
+        justify-content: flex-start;
+        flex-grow: 1;
+    }
+
+    .sidebar-close {
+        display: none;
+    }
+
+    @media only screen and (max-width: 600px) {
+        .sidebar-size {
+            /* display: none; */
+            width: 0%;
+            position: fixed;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .container-main-size {
+            flex-grow: 1;
+        }
+
+        .icon {
+            display: flex;
+            justify-content: flex-start;
+            flex-grow: 1;
+        }
+
+        .profile-name {
+            display: flex;
+            justify-content: center;
+            flex-grow: 1;
+        }
+
+        .sidebar-close {
+            display: flex;
+            justify-content: flex-end;
+            flex-grow: 1;
+        }
+
+        
+    }
+
+    .sidebar {
+        height: 100%;
+    }
+
+    .sidebar-header {
+        /* width: 100%; */
+        height: 40px;
+        background-color: #dbdfdf;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+    }
+    
+
+    .container-main {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header {
+        /* width: 100%; */
+        min-height: 40px;
+        /* background-color: rgb(191, 185, 197); */
+        background-color: #dbdfdf;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 0 20px;
+        border-left: 1px solid white;
+    }
+
+    .container{
+        background-color: whitesmoke;
+        padding: 10px 0;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 40px);
+        overflow-y: auto;
+        
+    }
+
+    .block1 {
+        padding: 10px 20px;
+        /* background-color: blue; */
+        display: flex;
+        justify-content: left;
+    }
+
+    .block2 {
+        padding: 10px 20px;
+        /* background-color: blue; */
+        display: flex;
+        justify-content: right;
+        border-radius: 2px;
+    }
+
+    .block1 .msg {
+        max-width: 65%;
+        background-color: #efecec;
+        padding: 5px 5px;
+        text-align: start;
+        border-radius: 5px;
+    }
+
+    .block2 .msg {
+        max-width: 65%;
+        background-color: wheat;
+        padding: 5px 5px;
+        text-align: end;
+        border-radius: 5px;
+    }
+
+    .text {
+        margin: 0;
+        padding: 2px;
+    }
+
+    .time {
+       display: flex;
+       justify-content: right;
+       font-size: x-small;
+       /* background-color: aqua; */
+    }
+
+    
+
+    .footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* height: 100px; */
+        max-height: 100px;
+        min-height: 60px;
+        color: white;
+        background-color: #dbdfdf;
+        border-left: 1px solid white;
+        display: none;
+    }
+
+    .input {
+        /* background-color: aqua; */
+        display: flex;
+        flex-grow: 1;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .textarea {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        resize: none;
+        width: 60%; 
+        min-height: 20px;
+        max-height: 40px;
+    }
+
+    .send {
+        height: 30px;
+    }
+
+    .sidebar-container {
+        background-color: #e1e3e3;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .sidebar-block1 {
+        /* background-color: rgb(219, 214, 214); */
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: left;
+        padding: 0 20px;
+    }
+
+    .sidebar-block1:hover {
+        background-color: rgb(185, 182, 182);
+    }
+
+    .item {
+        display: flex;
+        gap: 5px;
+        /*align-items: center;*/
+        /*justify-content: center;*/
+    }
+
+    .logo {
+        padding: 2px;
+        background-color: white;
+    }
+
+    .name {
+        padding: 2px;
+        
+    }
+
+
+
+    .login-container {
+        width: 300px;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        background-color: ghostwhite;
+    }
+
+        .login-container label,
+        .login-container input {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .login-container input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .login-container button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .login-container button:hover {
+            background-color: #45a049;
+        }
+
+
+
+        .registration-container {
+            background-color: ghostwhite;
+            width: 300px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .registration-container label,
+        .registration-container input {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .registration-container input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .registration-container button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .registration-container button:hover {
+            background-color: #45a049;
+        }
+
+    .user-account {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .container-message{
+        display: flex;
+        flex-grow: 1;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .container-message p {
+        font-size: 25px;
+        color: #235a6a;
+        font-weight: bold;
+    }
+
+
+</style>
+<body>
+    <div class="login">
+        <div class="login-container">
+            <h2>Login</h2>
+            <form id="loginForm">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+        
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <button type="button" onclick="submitForm()">Login</button>
+
+            </form>
+            <div>
+                <p>Don't have an account? <span style="color: blue" onclick="createAccount()">Create One Now</span></p>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="register">
+        <div class="registration-container">
+            <h2>Register</h2>
+            <form id="registrationForm">
+                <label for="username">Username:</label>
+                <input type="text" id="registerUsername" name="username" required>
+        
+                <label for="email">Email:</label>
+                <input type="email" id="registerEmail" name="email" required>
+        
+                <label for="password">Password:</label>
+                <input type="password" id="registerPassword" name="password" required>
+        
+                <button type="button" onclick="register()">Register</button>
+            </form>
+            <div>
+                <p>Already have an account? <span style="color: blue" onclick="loginAccount()">Login</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="sidebar-size sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-profile"><span id="profile"></span></div>
+                <div class="sidebar-close" onclick="sidePanelClose()"><i class="fa fa-times" aria-hidden="true"></i></div>
+            </div> 
+            <div id="sidebar-container" class="sidebar-container">
+<!--?                <div  class="sidebar-block1">-->
+<!--?                    <div class="item">-->
+<!--?                        <span class="logo">@</span>-->
+<!--?                        <span class="name">sakthi</span>-->
+<!--?                    </div>-->
+<!--?                </div>-->
+<!--?                <div class="sidebar-block1" onclick="getUser($event)">-->
+<!--?                    <div class="item">-->
+<!--?                        <span class="logo">@</span>-->
+<!--?                        <span class="name">vel</span>-->
+<!--?                    </div>-->
+<!--?                </div>-->
+<!--?                <div class="sidebar-block1">-->
+<!--?                    <div class="item">-->
+<!--?                        <span class="logo">@</span>-->
+<!--?                        <span class="name">ravi</span>-->
+<!--?                    </div>-->
+<!--?                </div>-->
+            </div>
+
+        </div>
+       
+        <div class="container-main-size container-main">
+            <div class="header">
+                    <div class="icon" onclick="sidePanelView()"><span><i class="fa fa-bars" aria-hidden="true"></i></span></div>
+                    <div class="profile-name"><span id="chatter-name"></span></div>
+                    <div class="logout" onclick="logout()"><span><i class="fa fa-sign-out" aria-hidden="true"></i></span></div>
+            </div>  
+    
+            <div id="msg-block" class="container">
+                <div class="container-message">
+                    <p id="start-msg">"Enjoy your chat"</p>
+                </div>
+<!--?                <div class="block1">-->
+<!--?                    <div class="msg">-->
+<!--?                        <p class="text">hi, how are you?</p>-->
+<!--?                        <span class="time">9:00 PM</span>-->
+<!--?                    </div>-->
+<!--?                </div>-->
+<!--?                <div class="block2">-->
+<!--?                    <div class="msg">-->
+<!--?                        <p class="text">fine, you</p>-->
+<!--?                        <span class="time">9:00 PM</span>-->
+<!--?                    </div>-->
+<!--?                </div>-->
+<!--?                <div class="block1">-->
+<!--?                    <div class="msg">-->
+<!--?                        <p class="text">great</p>-->
+<!--?                        <span class="time">9:00 PM</span>-->
+<!--?                    </div>-->
+<!--?                </div>-->
+            </div>
+    
+            <div class="footer">
+                <div class="input">
+                    <textarea id="messageInput" class="textarea"></textarea>
+                    <button class="send" onclick="sendMessage()">SEND</button>
+                </div>
+            </div> 
+        </div>
+    </div>
+    
+</body>
+<script>
+
+    var profileName=null;
+    var chatterId=null;
+    var socket=null;
+    var userId=null;
+    const apiUrl = "http://localhost:8000/";
+    const screen = localStorage.getItem('screen');
+    if (!screen) {
+        localStorage.setItem('screen', "login");
+    }
+
+    screenChange();
+
+    if (localStorage.getItem('screen') == "main") {
+        profileData();
+    }
+
+     async function profileData() {
+         const bearerToken = localStorage.getItem('token');
+         const response = await fetch("http://localhost:8000/get-user/", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + bearerToken,
+                "Content-Type": "application/json"
+            }
+            });
+            const result = await response.json();
+            if (result && result['status'] == "success") {
+                document.getElementById("sidebar-container").innerHTML="";
+                result['data'].forEach(({ id, username }) => {
+                    chatterData(id, username);
+                });
+                const profile = document.getElementById("profile");
+                profile.innerText = result['profile']['username'];
+                userId = result['profile']['user_id'];
+
+                socket = new WebSocket("ws://127.0.0.1:8000/ws/"+userId);
+                socket.onmessage = (event) => {
+                    console.log(event);
+                    const currentDatetime = new Date();
+                    const currentDatetimeString = currentDatetime.toLocaleString();
+                    displayMessage("block1", event.data, currentDatetimeString)
+                };
+            }
+        }
+
+
+     function chatterData(id, name) {
+        const msgBlock = document.getElementById("sidebar-container");
+        var block = document.createElement('div');
+        block.className = "sidebar-block1";
+        block.setAttribute('onclick', `getUser(${id},"${name}")`);
+        msgBlock.appendChild(block);
+
+        var item =  document.createElement('div');
+        item.className = 'item';
+        block.appendChild(item);
+
+        var logo = document.createElement('span');
+        logo.className = 'logo';
+        logo.innerText = "@";
+        item.appendChild(logo);
+
+        var text = document.createElement('span');
+        text.className = 'name';
+        text.innerText = name;
+        item.appendChild(text);
+    }
+
+    function getUser(id, name) {
+        const collection = document.getElementsByClassName("footer");
+        collection[0].style.display = 'flex';
+        const profile = document.getElementById("chatter-name");
+        profile.innerText = name;
+        chatterId = id;
+
+        document.getElementById("msg-block").innerHTML="";
+        fetchAndDisplayMessages();
+    }
+
+    function displayMessage(blockName, message, timeDuration) {
+        const msgBlock = document.getElementById("msg-block");
+
+        var block = document.createElement('div');
+        block.className = blockName;
+        msgBlock.appendChild(block);
+
+        var msg =  document.createElement('div');
+        msg.className = 'msg';
+    
+        block.appendChild(msg);
+        
+        var text = document.createElement('p');
+        text.className = 'text';
+        text.innerText = message;
+        msg.appendChild(text);
+
+        var time = document.createElement('span');
+        time.className = 'time';
+        time.innerText = timeDuration;
+        msg.appendChild(time);
+
+        msgBlock.scrollTop = msgBlock.scrollHeight;
+    }
+
+    async function fetchAndDisplayMessages() {
+        const userData = {
+            "sender": userId,
+            "receiver": chatterId
+        };
+        const response = await fetch("http://localhost:8000/messages/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(userData),
+            });
+            const result = await response.json();
+            if (result && result['status'] == "success") {
+                if (result['data'].length > 0) {
+                    result['data'].forEach(({sender_id, message, datetime}) => {
+                        const utcDatetime = new Date(datetime);
+                        const currentDatetimeString = utcDatetime.toLocaleString();
+                        if (userId == sender_id) {
+                            displayMessage("block2", message, currentDatetimeString)
+                        } else {
+                            displayMessage("block1", message, currentDatetimeString)
+                        }
+                    });
+                } else {
+                    const msgBlock = document.getElementById("msg-block");
+
+                    var block = document.createElement('div');
+                    block.className = "container-message";
+                    block.innerHTML =`<p id="start-msg">"Say hi"</p>`;
+                    msgBlock.appendChild(block);
+                    // document.getElementById("start-msg").innerHTML="";
+                }
+            }
+    }
+
+    function sendMessage() {
+        const messageInput = document.getElementById("messageInput");
+        const message = messageInput.value;
+        if (message) {
+            const userMessage = chatterId + "@" + message;
+            socket.send(userMessage);
+            const currentDatetime = new Date();
+            const currentDatetimeString = currentDatetime.toLocaleString();
+            displayMessage("block2", message, currentDatetimeString);
+            messageInput.value = "";
+        }
+    }
+
+
+
+    function screenChange() {
+        const screen = localStorage.getItem('screen');
+        const token = localStorage.getItem('token');
+        const login = document.getElementsByClassName("login");
+        const register = document.getElementsByClassName("register");
+        const main = document.getElementsByClassName("main");
+        if (screen == 'register') {
+            login[0].style.display = "none";
+            register[0].style.display = "flex";
+            main[0].style.display = "none";
+        } else if (token && screen == 'main') {
+            login[0].style.display = "none";
+            register[0].style.display = "none";
+            main[0].style.display = "flex";
+        } else {
+            login[0].style.display = "flex";
+            register[0].style.display = "none";
+            main[0].style.display = "none";
+        }
+    }
+
+    function createAccount() {
+        localStorage.setItem('screen', "register");
+        screenChange();
+    }
+    function loginAccount() {
+        localStorage.setItem('screen', "login");
+        screenChange();
+    }
+
+    async function submitForm() {
+        const userData = {
+            "email": document.getElementById('email').value,
+            "password": document.getElementById('password').value
+        };
+
+        try {
+            const response = await fetch("http://localhost:8000/verify-user/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(userData),
+            });
+            const result = await response.json();
+            if (result && result['status'] == "success") {
+                console.log("Success:", result);
+                console.log("Success:", result['status']);
+                localStorage.setItem('token', result['access_token']);
+                localStorage.setItem('screen', "main");
+                profile = {"name": result}
+                screenChange();
+                profileData();
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+
+    async function register() {
+       
+        const userData = {
+            "user_name": document.getElementById('registerUsername').value,
+            "email": document.getElementById('registerEmail').value,
+            "password": document.getElementById('registerPassword').value
+        };
+
+        try {
+            const response = await fetch("http://localhost:8000/create-user/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(userData),
+            });
+            const result = await response.json();
+            if (result && result['status'] == "success") {
+                console.log("Success:", result);
+                console.log("Success:", result['status']);
+                localStorage.setItem('screen', "login");
+                screenChange()
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+
+    async function logout() {
+        const userData = {};
+        const bearerToken = localStorage.getItem('token');
+        const response = await fetch("http://localhost:8000/logout/", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + bearerToken,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(userData),
+            });
+            const result = await response.json();
+            if (result && result['status'] == "success") {
+                localStorage.removeItem('token');
+                localStorage.removeItem('screen');
+                screenChange();
+            }
+    }
+
+    
+    function sidePanelView() {
+        const collection = document.getElementsByClassName("sidebar-size");
+        collection[0].style.width = "60%";
+    }
+
+    function sidePanelClose() {
+        const collection = document.getElementsByClassName("sidebar-size");
+        collection[0].style.width = "0%";
+    }
+
+    go();
+    window.addEventListener('resize', go);
+
+    function go(){
+    var screenWidth = document.documentElement.clientWidth;
+    const collection = document.getElementsByClassName("sidebar-size");
+    if (screenWidth >= '600') {
+        collection[0].style.width = "25%";
+    } else {
+        collection[0].style.width = "0%";
+    }
+
+}
+
+</script>
+</html>
