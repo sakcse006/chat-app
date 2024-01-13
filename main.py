@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import jwt
 import boto3
 from datetime import datetime
+from fastapi.responses import FileResponse
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -68,6 +69,9 @@ app.add_middleware(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 blacklisted_tokens = []
 
+@app.get("/")
+def read_root():
+    return FileResponse("index.html")
 
 def get_db():
     db = SessionLocal()
