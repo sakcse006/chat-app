@@ -487,6 +487,7 @@
     var socket=null;
     var userId=null;
     const apiUrl = "http://localhost:8000/";
+    const socketApi = "ws://127.0.0.1:8000/ws/";
     const screen = localStorage.getItem('screen');
     if (!screen) {
         localStorage.setItem('screen', "login");
@@ -500,7 +501,7 @@
 
      async function profileData() {
          const bearerToken = localStorage.getItem('token');
-         const response = await fetch("http://localhost:8000/get-user/", {
+         const response = await fetch(apiUrl+"get-user/", {
             method: "GET",
             headers: {
                 "Authorization": "Bearer " + bearerToken,
@@ -517,7 +518,7 @@
                 profile.innerText = result['profile']['username'];
                 userId = result['profile']['user_id'];
 
-                socket = new WebSocket("ws://127.0.0.1:8000/ws/"+userId);
+                socket = new WebSocket(socketApi+userId);
                 socket.onmessage = (event) => {
                     console.log(event);
                     const currentDatetime = new Date();
@@ -591,7 +592,7 @@
             "sender": userId,
             "receiver": chatterId
         };
-        const response = await fetch("http://localhost:8000/messages/", {
+        const response = await fetch(apiUrl+"messages/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -674,7 +675,7 @@
         };
 
         try {
-            const response = await fetch("http://localhost:8000/verify-user/", {
+            const response = await fetch(apiUrl+"verify-user/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -687,7 +688,7 @@
                 console.log("Success:", result['status']);
                 localStorage.setItem('token', result['access_token']);
                 localStorage.setItem('screen', "main");
-                profile = {"name": result}
+                profile = {"name": result};
                 screenChange();
                 profileData();
             }
@@ -705,7 +706,7 @@
         };
 
         try {
-            const response = await fetch("http://localhost:8000/create-user/", {
+            const response = await fetch(apiUrl+"create-user/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -727,7 +728,7 @@
     async function logout() {
         const userData = {};
         const bearerToken = localStorage.getItem('token');
-        const response = await fetch("http://localhost:8000/logout/", {
+        const response = await fetch(apiUrl+"logout/", {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + bearerToken,
@@ -770,3 +771,4 @@
 
 </script>
 </html>
+
