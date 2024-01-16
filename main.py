@@ -69,9 +69,11 @@ app.add_middleware(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 blacklisted_tokens = []
 
+
 @app.get("/")
 def read_root():
     return FileResponse("index.html")
+
 
 def get_db():
     db = SessionLocal()
@@ -145,8 +147,23 @@ def chat_message(data: str, sender: int, receiver: int, db: Session = Depends(ge
 @app.post("/messages/")
 async def get_messages(payload: dict, db: Session = Depends(get_db)):
     try:
-        chat = db.query(Chat).filter(Chat.sender_id.in_([payload['sender'], payload['receiver']]), Chat.receiver_id.in_([payload['sender'], payload['receiver']])).all()
-        return {"status": "success", "data": chat}
+        if payload['type'] == "all":
+            chat = db.query(Chat).filter(Chat.sender_id.in_([payload['sender'], payload['receiver']]), Chat.receiver_id.in_([payload['sender'], payload['receiver']])).all()
+            return {"status": "success", "data": chat}
+        else:
+            chat = db.query(Chat).filter(Chat.sender_id == payload['sender'], Chat.receiver_id == payload['receiver']).order_by(-Chat.id).first()
+            return {"status": "success", "data": chat}
+    except Exception as e:
+        raise Exception(e.args)
+
+
+@app.post("/message-delete/")
+async def message_delete(payload: dict, db: Session = Depends(get_db)):
+    try:
+        record = db.query(Chat).filter(Chat.id == payload['chat_id']).first()
+        db.delete(record)
+        db.commit()
+        return {"status": "success", "message": "Delete Successfully"}
     except Exception as e:
         raise Exception(e.args)
 
@@ -180,7 +197,7 @@ def verify_user(user: dict, db: Session = Depends(get_db)):
         access_token = create_jwt_token(data=token_data, expires_delta=access_token_expires)
         return {"status": "success", "access_token": access_token, "token_type": "bearer"}
     else:
-        return {"status": "failure", "message": "invalid credentials"}
+        return {"status": "failure", "message": "Invalid credential"}
 
 
 @app.get("/users/{user_id}")
