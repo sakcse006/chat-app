@@ -19,7 +19,7 @@
     .main {
         display: flex;
         width: 100%;
-        height: 100vh;
+        height: 100dvh;
         display: none;
     }
 
@@ -441,19 +441,7 @@
 <body>
 
     <div id="dialog-box-id" class="dialog-box">
-        <div class="dialog-content">
-            <div class="dialog-msg">
-                <span >Invalid credentials</span>
-                <span class="dialog-close" onclick="dialogClose()"><i class="fa fa-times" aria-hidden="true"></i></span>
-            </div>
-            <div class="dialog-button">
-                <button id="dialogCancel">Cancel</button>
-                <button id="dialogSuccess">Ok</button>
-            </div>
-        </div>
     </div>
-
-<!--?    <button onclick="test()">test</button>-->
 
     <div class="login">
         <div class="login-container">
@@ -617,8 +605,8 @@
                     <span class="dialog-close" id="dialogClose"><i class="fa fa-times" aria-hidden="true"></i></span>
                 </div>
                 <div class="dialog-button">
-                    <button id="dialogCancel">Cancel</button>
-                    <button id="dialogSuccess">Ok</button>
+                    <button id="dialogCancel">No</button>
+                    <button id="dialogSuccess">Yes</button>
                 </div>
             </div>`
         }
@@ -712,7 +700,7 @@
         item.appendChild(text);
     }
 
-    function getUser(id, name) {0
+    function getUser(id, name) {
         const collection = document.getElementsByClassName("footer");
         collection[0].style.display = 'flex';
         const profile = document.getElementById("chatter-name");
@@ -722,6 +710,12 @@
 
         document.getElementById("msg-block").innerHTML="";
         fetchAndDisplayMessages();
+
+        var screenWidth = document.documentElement.clientWidth;
+        if (screenWidth <= '600') {
+            const sideBarSize = document.getElementsByClassName("sidebar-size");
+            sideBarSize[0].style.width = "0%";
+        }
     }
 
     function displayMessage(blockName, message, timeDuration, id) {
@@ -952,22 +946,30 @@
     }
 
     async function logout() {
-        const userData = {};
-        const bearerToken = localStorage.getItem('token');
-        const response = await fetch(apiUrl+"logout/", {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer " + bearerToken,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(userData),
-            });
-            const result = await response.json();
-            if (result && result['status'] == "success") {
-                localStorage.removeItem('token');
-                localStorage.removeItem('screen');
-                screenChange();
-            }
+        dialogBoxView({"type": "promt", "message": "Are you sure you want to logout?"})
+        .then(async () => {
+            const userData = {};
+            const bearerToken = localStorage.getItem('token');
+            const response = await fetch(apiUrl+"logout/", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + bearerToken,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(userData),
+                });
+                const result = await response.json();
+                if (result && result['status'] == "success") {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('screen');
+                    screenChange();
+                    location.reload();
+                }
+        })
+        .catch(() => {
+            console.error("failure");
+        });
+
     }
 
     
