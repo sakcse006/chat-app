@@ -436,9 +436,84 @@
         gap: 5px;
     }
 
+    .loader-spinner-full-screen {
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        z-index: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #ebebeb;
+        display: none;
+    }
+
+    .loader {
+
+         width: 40px;
+         aspect-ratio: 1;
+         animation: l5-0 1s infinite steps(1);
+
+    }
+
+    .loader::before,
+
+    .loader::after {
+
+     content: "";
+
+     position: absolute;
+
+     inset:0 50% 50% 0;
+
+     transform-origin: bottom right;
+
+     animation:
+
+      l5-1 0.5s infinite linear alternate,
+
+      l5-2 0.5s infinite steps(1) alternate;
+
+    }
+
+    .loader::after {
+
+     --s:-1,-1;
+
+    }
+
+    @keyframes l5-0 {
+
+     0% {transform:scale(1, 1) rotate(0deg)}
+
+     50% {transform:scale(1,-1) rotate(90deg)}
+
+    }
+
+
+
+    @keyframes l5-1 {
+
+     0%  {transform:scale(var(--s,1)) perspective(150px) rotateX( 0deg)}
+
+     100% {transform:scale(var(--s,1)) perspective(150px) rotateX(180deg)}
+
+    }
+
+    @keyframes l5-2 {
+
+     0% {background:#25b09b}
+
+     50%{background:#514b82}
+
+    }
 
 </style>
 <body>
+
+    <div id="spinnerFullScreen" class="loader-spinner-full-screen">
+        <div class="loader"></div>
+    </div>
 
     <div id="dialog-box-id" class="dialog-box">
     </div>
@@ -516,12 +591,14 @@
             <div class="header">
                     <div class="icon" onclick="sidePanelView()"><span><i class="fa fa-bars" aria-hidden="true"></i></span></div>
                     <div class="profile-name"><span id="chatter-name"></span></div>
-                    <div class="logout" onclick="logout()"><span><i class="fa fa-sign-out" aria-hidden="true"></i></span></div>
+                    <div class="logout"><span onclick="logout()"><i class="fa fa-sign-out" aria-hidden="true"></i></span></div>
             </div>  
     
             <div id="msg-block" class="container">
+<!--?                 <div class="loader"></div>-->
                 <div class="container-message">
                     <p id="start-msg">"Enjoy your chat"</p>
+<!--?                    <div class="loader"></div>-->
                 </div>
 <!--?                <div class="block1">-->
 
@@ -648,6 +725,8 @@
     }
 
      async function profileData() {
+         let spinnerFullScreen = document.getElementById('spinnerFullScreen');
+         spinnerFullScreen.style.display = "flex";
          const bearerToken = localStorage.getItem('token');
          const response = await fetch(apiUrl+"get-user/", {
             method: "GET",
@@ -665,6 +744,7 @@
                 const profile = document.getElementById("profile");
                 profile.innerHTML = `<h4>${result['profile']['username']}</h4>`;
                 userId = result['profile']['user_id'];
+                spinnerFullScreen.style.display = "none";
 
                 socket = new WebSocket(socketApi+userId);
                 socket.onmessage = (event) => {
@@ -701,6 +781,12 @@
     }
 
     function getUser(id, name) {
+        const msgBlock = document.getElementById("msg-block");
+        msgBlock.innerHTML = "";
+        msgBlock.innerHTML =
+                `<div class="container-message">
+                    <div class="loader"></div>
+                </div>`;
         const collection = document.getElementsByClassName("footer");
         collection[0].style.display = 'flex';
         const profile = document.getElementById("chatter-name");
@@ -708,7 +794,6 @@
         profile.style.fontSize = '18px';
         chatterId = id;
 
-        document.getElementById("msg-block").innerHTML="";
         fetchAndDisplayMessages();
 
         var screenWidth = document.documentElement.clientWidth;
@@ -787,6 +872,8 @@
             });
             const result = await response.json();
             if (result && result['status'] == "success") {
+                let msgBlock = document.getElementById("msg-block");
+                msgBlock.innerHTML = "";
                 if (result['data'].length > 0) {
                     result['data'].forEach(({id, sender_id, message, datetime}) => {
                         const utcDatetime = new Date(datetime);
@@ -798,13 +885,10 @@
                         }
                     });
                 } else {
-                    const msgBlock = document.getElementById("msg-block");
-
-                    var block = document.createElement('div');
-                    block.className = "container-message";
-                    block.innerHTML =`<p id="start-msg">"Say hi"</p>`;
-                    msgBlock.appendChild(block);
-                    // document.getElementById("start-msg").innerHTML="";
+                     msgBlock.innerHTML =
+                        `<div class="container-message">
+                            <p id="start-msg">"Say Hi"</p>
+                        </div>`;
                 }
             }
     }
